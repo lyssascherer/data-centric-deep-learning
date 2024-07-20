@@ -86,11 +86,11 @@ def build_regression_test(system, loader):
     # torch tensor to a list, use: `x.numpy().tolist()`. 
     # 
     # Our solution is 2-3 lines of code. 
-    # 
-    # Pseudocode:
     # -- 
-    # batch_loss = ...
-    # convert batch_loss to list of floats
+    batch_loss = F.cross_entropy(logits, labels, reduction='none')
+    batch_loss = batch_loss.numpy().tolist()
+
+    batch_is_correct = (labels==preds).long().numpy().tolist()
     # 
     # Type:
     # --
@@ -99,7 +99,6 @@ def build_regression_test(system, loader):
     # batch_is_correct: List[int] (not a torch.Tensor!)
     #   List of integers - 1 if the model got that element correct 
     #                    - 0 if the model got that element incorrect
-    pass # remove me
     # ================================
     losses.extend(batch_loss)
     is_correct.extend(batch_is_correct)

@@ -67,6 +67,7 @@ class TestFlow(FlowSpec):
     self.dm = MNISTDataModule(config)
     self.system = DigitClassifierSystem.load_from_checkpoint(checkpoint_path)
     self.checkpoint_path = checkpoint_path
+    self.model_name = str(config.model).split(".")[0]
 
     self.next(self.test)
 
@@ -108,7 +109,7 @@ class TestFlow(FlowSpec):
     pprint(results)
 
     # save to disk
-    log_file = join(LOG_DIR, log_name)
+    log_file = join(LOG_DIR, f"{self.model_name}_{log_name}")
     os.makedirs(os.path.dirname(log_file), exist_ok = True)
     to_json(results, log_file)
 
