@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import pandas as pd
+import re
 from os.path import join
 from torch.utils.data import Dataset
 from collections import defaultdict
@@ -43,7 +44,10 @@ class ProductReviewEmbeddings(Dataset):
     # loop through `self.data.review`
     #   split review into tokens
     #   update vocab with each token
-    # 
+    for review in self.data.review:
+      review_words = re.findall(r'\w+', review.lower())
+      for token in review_words:
+        vocab[token.lower()] +=1
     # Type:
     # --
     # vocab: dict[str, int]
@@ -107,11 +111,15 @@ class ProductReviewStream(Dataset):
     # loop through `self.data.review`
     #   split review into tokens
     #   update vocab with each token
+    for review in self.data.review:
+      review_words = re.findall(r'\w+', review.lower())
+      for token in review_words:
+        vocab[token.lower()] +=1
     # 
     # Type:
     # --
     # vocab: dict[str, int]
-    pass  # remove me
+    # pass  # remove me
     # ===============================
     return dict(vocab)
 

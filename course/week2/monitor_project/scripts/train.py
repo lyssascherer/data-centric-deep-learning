@@ -27,7 +27,7 @@ class TrainClassifier(FlowSpec):
   config_path = Parameter(
     'config', 
     help = 'path to config file', 
-    default = join(CONFIG_DIR, 'train.json'),
+    default = join(CONFIG_DIR, 'update.json'),
   )
 
   @step
