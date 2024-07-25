@@ -129,40 +129,41 @@ class TrainIdentifyReview(FlowSpec):
       probs_ = None
       # ===============================================
       # FILL ME OUT
-      # 
-      # Fit a new `SentimentClassifierSystem` on the split of 
-      # `X` and `y` defined by the current `train_index` and
-      # `test_index`. Then, compute predicted probabilities on 
-      # the test set. Store these probabilities as a 1-D numpy
-      # array `probs_`.
-      # 
-      # Use `self.config.train.optimizer` to specify any hparams 
-      # like `batch_size` or `epochs`.
-      #  
-      # HINT: `X` and `y` are currently numpy objects. You will 
-      # need to convert them to torch tensors prior to training. 
-      # You may find the `TensorDataset` class useful. Remember 
-      # that `Trainer.fit` and `Trainer.predict` take `DataLoaders`
-      # as an input argument.
-      # 
-      # Our solution is ~15 lines of code.
-      # 
-      # Pseudocode:
-      # --
       # Get train and test slices of X and y.
+      X_train = X[train_index]
+      y_train = y[train_index]
+      X_test = X[test_index]
+      y_test = y[test_index]
+
       # Convert to torch tensors.
+      X_train = torch.from_numpy(X_train)
+      y_train = torch.from_numpy(y_train)
+      X_test = torch.from_numpy(X_test)
+      y_test = torch.from_numpy(y_test)
+
       # Create train/test datasets using tensors.
+      train_dataset = TensorDataset(X_train, y_train)
+      test_dataset = TensorDataset(X_test, y_test)
+
       # Create train/test data loaders from datasets.
+      dl_train = DataLoader(train_dataset, batch_size = self.config.train.optimizer.batch_size)
+      dl_test = DataLoader(test_dataset, batch_size = self.config.train.optimizer.batch_size)
+
       # Create `SentimentClassifierSystem`.
+      system = SentimentClassifierSystem(self.config)
+
       # Create `Trainer` and call `fit`.
+      trainer = Trainer(max_epochs = self.config.train.optimizer.max_epochs)
+      trainer.fit(system, dl_train)
+
       # Call `predict` on `Trainer` and the test data loader.
+      pred_logits = trainer.predict(system, dl_test, ckpt_path = 'best', return_predictions=True)
+      
       # Convert probabilities back to numpy (make sure 1D).
-      # 
-      # Types:
-      # --
-      # probs_: np.array[float] (shape: |test set|)
-      # TODO
+      probs_ = torch.cat(pred_logits, dim=0).numpy().reshape(-1)
       # ===============================================
+
+
       assert probs_ is not None, "`probs_` is not defined."
       probs[test_index] = probs_
 
@@ -195,19 +196,9 @@ class TrainIdentifyReview(FlowSpec):
     
     # =============================
     # FILL ME OUT
-    # 
-    # Apply confidence learning to labels and out-of-sample
-    # predicted probabilities. 
-    # 
-    # HINT: use cleanlab. See tutorial. 
-    # 
-    # Our solution is one function call.
-    # 
-    # Types
-    # --
-    # ranked_label_issues: List[int]
-    # TODO
+    ranked_label_issues = find_label_issues(self.all_df["label"], prob, return_indices_ranked_by="normalized_margin")
     # =============================
+    
     assert ranked_label_issues is not None, "`ranked_label_issues` not defined."
 
     # save this to class
@@ -293,17 +284,9 @@ class TrainIdentifyReview(FlowSpec):
 
     # ====================================
     # FILL ME OUT
-    # 
-    # Overwrite the dataframe in each dataset with `all_df`. Make sure to 
-    # select the right indices. Since `all_df` contains the corrected labels,
-    # training on it will incorporate cleanlab's re-annotations.
-    # 
-    # Pseudocode:
-    # --
-    # dm.train_dataset.data = training slice of self.all_df
-    # dm.dev_dataset.data = dev slice of self.all_df
-    # dm.test_dataset.data = test slice of self.all_df
-    # TODO
+    dm.train_dataset.data = self.all_df[:train_size]
+    dm.dev_dataset.data = self.all_df[train_size:train_size+dev_size]
+    dm.test_dataset.data = self.all_df[train_size+dev_size:]
     # # ====================================
 
     # start from scratch
